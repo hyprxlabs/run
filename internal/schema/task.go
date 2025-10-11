@@ -1,0 +1,327 @@
+package schema
+
+import (
+	"strconv"
+	"strings"
+
+	"go.yaml.in/yaml/v4"
+)
+
+type With map[string]interface{}
+
+type Task struct {
+	Id        string
+	Desc      *string
+	Help      *string
+	Name      *string
+	Env       *Environment
+	DotEnv    []string
+	Cwd       *string
+	Timeout   *string
+	Run       *string
+	Uses      *string
+	Args      []string
+	Needs     []string
+	With      With
+	Hosts     []string
+	Condition *string
+}
+
+func (t *Task) UnmarshalYAML(value *yaml.Node) error {
+	if t == nil {
+		t = &Task{}
+	}
+
+	if value.Kind == yaml.ScalarNode {
+		t.Run = &value.Value
+		return nil
+	}
+
+	if value.Kind != yaml.MappingNode {
+		return yamlErrorf(*value, "expected yaml scalar or mapping for task")
+	}
+
+	for i := 0; i < len(value.Content); i += 2 {
+		keyNode := value.Content[i]
+		valueNode := value.Content[i+1]
+
+		key := keyNode.Value
+		switch key {
+		case "id":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'id' field")
+			}
+			t.Id = valueNode.Value
+		case "desc":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'desc' field")
+			}
+			t.Desc = &valueNode.Value
+		case "help":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'help' field")
+			}
+			t.Help = &valueNode.Value
+		case "name":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'name' field")
+			}
+			t.Name = &valueNode.Value
+		case "env":
+			var env Environment
+			if err := valueNode.Decode(&env); err != nil {
+				return err
+			}
+			t.Env = &env
+		case "dotenv", "envfile", "env-file":
+			if valueNode.Kind != yaml.SequenceNode {
+				return yamlErrorf(*valueNode, "expected yaml sequence for 'dotenv' field")
+			}
+			t.DotEnv = make([]string, 0)
+			for _, item := range valueNode.Content {
+				if item.Kind != yaml.ScalarNode {
+					return yamlErrorf(*item, "expected yaml scalar in 'dotenv' list")
+				}
+				t.DotEnv = append(t.DotEnv, item.Value)
+			}
+		case "cwd":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'cwd' field")
+			}
+			t.Cwd = &valueNode.Value
+		case "timeout":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'timeout' field")
+			}
+			t.Timeout = &valueNode.Value
+		case "run":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'run' field")
+			}
+			t.Run = &valueNode.Value
+		case "uses":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'uses' field")
+			}
+			t.Uses = &valueNode.Value
+		case "args":
+			if valueNode.Kind != yaml.SequenceNode {
+				return yamlErrorf(*valueNode, "expected yaml sequence for 'args' field")
+			}
+			t.Args = make([]string, 0)
+			for _, item := range valueNode.Content {
+				if item.Kind != yaml.ScalarNode {
+					return yamlErrorf(*item, "expected yaml scalar in 'args' list")
+				}
+				t.Args = append(t.Args, item.Value)
+			}
+		case "needs", "deps", "dependencies":
+			if valueNode.Kind != yaml.SequenceNode {
+				return yamlErrorf(*valueNode, "expected yaml sequence for 'needs' field")
+			}
+			t.Needs = make([]string, 0)
+			for _, item := range valueNode.Content {
+				if item.Kind != yaml.ScalarNode {
+					return yamlErrorf(*item, "expected yaml scalar in 'needs' list")
+				}
+				t.Needs = append(t.Needs, item.Value)
+			}
+		case "with", "input", "inputs":
+			var with With
+			if err := valueNode.Decode(&with); err != nil {
+				return err
+			}
+			t.With = with
+		case "hosts":
+			if valueNode.Kind != yaml.SequenceNode {
+				return yamlErrorf(*valueNode, "expected yaml sequence for 'hosts' field")
+			}
+			t.Hosts = make([]string, 0)
+			for _, item := range valueNode.Content {
+				if item.Kind != yaml.ScalarNode {
+					return yamlErrorf(*item, "expected yaml scalar in 'hosts' list")
+				}
+				t.Hosts = append(t.Hosts, item.Value)
+			}
+		case "if", "condition":
+			if valueNode.Kind != yaml.ScalarNode {
+				return yamlErrorf(*valueNode, "expected yaml scalar for 'condition' field")
+			}
+			t.Condition = &valueNode.Value
+		default:
+			return yamlErrorf(*keyNode, "unexpected field '%s' in task", key)
+		}
+	}
+
+	return nil
+}
+
+func (w With) TryGetValue(key ...string) (interface{}, bool) {
+	if w == nil {
+		return nil, false
+	}
+
+	for _, k := range key {
+		v, ok := w[k]
+		if ok {
+			return v, ok
+		}
+
+		for k1, v1 := range w {
+			if strings.EqualFold(k1, k) {
+				return v1, true
+			}
+		}
+	}
+
+	return nil, false
+}
+
+func (w With) TryGetString(key ...string) (string, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return "", false
+	}
+
+	s, ok := v.(string)
+	return s, ok
+}
+
+func (w With) TryGetBool(key ...string) (bool, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return false, false
+	}
+
+	b, ok := v.(bool)
+	if ok {
+		return b, ok
+	}
+
+	s, ok := v.(string)
+	b, err := strconv.ParseBool(s)
+	return b, err == nil
+}
+
+func (w With) TryGetInt(key ...string) (int, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return 0, false
+	}
+
+	i, ok := v.(int)
+	if ok {
+		return i, ok
+	}
+
+	s, ok := v.(string)
+	i64, err := strconv.ParseInt(s, 10, 32)
+	return int(i64), err == nil
+}
+
+func (w With) TryGetFloat(key ...string) (float64, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return 0, false
+	}
+
+	f, ok := v.(float64)
+	if ok {
+		return f, ok
+	}
+
+	s, ok := v.(string)
+	f, err := strconv.ParseFloat(s, 64)
+	return f, err == nil
+}
+
+func (w With) TryGetStringSlice(key ...string) ([]string, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return nil, false
+	}
+
+	ss, ok := v.([]string)
+	if ok {
+		return ss, ok
+	}
+
+	sa, ok := v.([]interface{})
+	if !ok {
+		return nil, false
+	}
+
+	results := make([]string, 0, len(sa))
+	for _, item := range sa {
+		s, ok := item.(string)
+		if !ok {
+			continue
+		}
+		results = append(results, s)
+	}
+
+	if len(results) == 0 {
+		return nil, false
+	}
+
+	return results, true
+}
+
+func (w With) TryGetMap(key ...string) (map[string]interface{}, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return nil, false
+	}
+
+	m, ok := v.(map[string]interface{})
+	return m, ok
+}
+
+func (w With) Keys() []string {
+	if w == nil {
+		return []string{}
+	}
+
+	keys := make([]string, 0, len(w))
+	for k := range w {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+func (w With) Len() int {
+	if w == nil {
+		return 0
+	}
+	return len(w)
+}
+
+func (w With) TryGetSlice(key ...string) ([]interface{}, bool) {
+	v, ok := w.TryGetValue(key...)
+	if !ok {
+		return nil, false
+	}
+
+	sa, ok := v.([]interface{})
+	if !ok {
+		return nil, false
+	}
+
+	if len(sa) == 0 {
+		return nil, false
+	}
+
+	return sa, true
+}
+
+func (w With) ToMap() map[string]interface{} {
+	if w == nil {
+		return map[string]interface{}{}
+	}
+
+	m := make(map[string]interface{}, len(w))
+	for k, v := range w {
+		m[k] = v
+	}
+	return m
+}
