@@ -377,7 +377,7 @@ func Split(s string) *Args {
 		}
 
 		if unicode.IsSpace(c) {
-			break
+			continue
 		}
 
 		token.WriteRune(c)
@@ -574,7 +574,7 @@ func SplitAndExpand(s string, expand func(string) (string, error)) (*Args, error
 		}
 
 		if unicode.IsSpace(c) {
-			break
+			continue
 		}
 
 		token.WriteRune(c)

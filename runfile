@@ -2,5 +2,7 @@
 
 tasks:
   echo:
-    uses: bash
-    run: echo "Hello, World!"
+    uses: shell
+    run: | 
+      echo "Hello, World!"
+      echo "This is a test" | grep "test2" || echo "No match found"
