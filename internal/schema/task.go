@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hyprxlabs/run/internal/errors"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -25,6 +26,13 @@ type Task struct {
 	With      With
 	Hosts     []string
 	Condition *string
+}
+
+func NewTasks() *Tasks {
+	return &Tasks{
+		entries: make(map[string]Task),
+		keys:    []string{},
+	}
 }
 
 func (t *Task) UnmarshalYAML(value *yaml.Node) error {
@@ -324,4 +332,79 @@ func (w With) ToMap() map[string]interface{} {
 		m[k] = v
 	}
 	return m
+}
+
+func (t *Tasks) FlattenTasks(targets []string) ([]Task, error) {
+	return FlattenTasks(targets, *t, []Task{})
+}
+
+func FlattenTasks(targets []string, tasks Tasks, set []Task) ([]Task, error) {
+
+	for _, target := range targets {
+		task, ok := tasks.Get(target)
+		if !ok {
+			return nil, errors.New("Task not found: " + target)
+		}
+
+		if len(task.Needs) > 0 {
+			neededTasks, err := FlattenTasks(task.Needs, tasks, set)
+			if err != nil {
+				return nil, err
+			}
+			set = neededTasks
+		}
+
+		added := false
+		for _, task2 := range set {
+			if task.Id == task2.Id {
+				added = true
+				break
+			}
+		}
+
+		if !added {
+			set = append(set, task)
+		}
+	}
+
+	return set, nil
+}
+
+func FindCyclicalReferences(tasks []Task) []Task {
+	stack := []Task{}
+	cycles := []Task{}
+
+	var resolve func(task Task) bool
+	resolve = func(task Task) bool {
+		for _, t := range stack {
+			if task.Id == t.Id {
+				return false
+			}
+		}
+
+		stack = append(stack, task)
+
+		if len(task.Needs) > 0 {
+			for _, need := range task.Needs {
+				for _, nextTask := range tasks {
+					if nextTask.Id == need {
+						if !resolve(nextTask) {
+							return false
+						}
+					}
+				}
+			}
+		}
+
+		stack = stack[:len(stack)-1]
+		return true
+	}
+
+	for _, task := range tasks {
+		if !resolve(task) {
+			cycles = append(cycles, task)
+		}
+	}
+
+	return cycles
 }

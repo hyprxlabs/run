@@ -3,8 +3,10 @@ package schema
 import (
 	"fmt"
 	"iter"
+	"strconv"
 	"strings"
 
+	"github.com/hyprxlabs/run/internal/errors"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -23,6 +25,133 @@ type HostEntry struct {
 type Hosts struct {
 	entries map[string]HostEntry
 	keys    []string
+}
+
+type HostImports struct {
+	Hosts   Hosts
+	Imports []string
+}
+
+func (hi *HostImports) UnmarshalYAML(node *yaml.Node) error {
+	if hi == nil {
+		hi = &HostImports{}
+	}
+
+	hn := hi
+
+	if node.Kind == yaml.SequenceNode {
+		for _, item := range node.Content {
+			if item.Kind == yaml.ScalarNode {
+				hn.Imports = append(hn.Imports, item.Value)
+				continue
+			}
+
+			if item.Kind != yaml.MappingNode {
+				continue
+			}
+
+			var host HostEntry
+			if err := item.Decode(&host); err != nil {
+				return err
+			}
+
+			if host.Host == "" {
+				return errors.New("host entry missing host field")
+			}
+
+			hn.Hosts.Set(host.Host, &host)
+		}
+
+		return nil
+	}
+
+	if node.Kind != yaml.MappingNode {
+		return errors.New("invalid hosts entry")
+	}
+
+	for i := 0; i < len(node.Content); i += 2 {
+		keyNode := node.Content[i]
+		valNode := node.Content[i+1]
+
+		if keyNode.Kind != yaml.ScalarNode {
+			return errors.New("host key must be a string")
+		}
+
+		key := keyNode.Value
+
+		if valNode.Kind == yaml.ScalarNode {
+			next := &HostEntry{}
+			hostname := valNode.Value
+			if strings.ContainsRune(valNode.Value, '@') {
+				parts := strings.SplitN(valNode.Value, "@", 2)
+				next.User = &parts[0]
+				hostname = parts[1]
+			}
+
+			if strings.ContainsRune(hostname, ':') {
+				parts := strings.SplitN(hostname, ":", 2)
+				hostname = parts[0]
+				if len(parts[1]) > 0 {
+					portValue, err := strconv.Atoi(parts[1])
+					if err != nil {
+						return err
+					}
+					port := uint(portValue)
+					next.Port = &port
+				}
+			}
+
+			next.Host = hostname
+			hn.Hosts.Set(key, next)
+			continue
+		}
+
+		if valNode.Kind != yaml.MappingNode {
+			return errors.New("invalid host entry")
+		}
+
+		var host HostEntry
+		if err := valNode.Decode(&host); err != nil {
+			return err
+		}
+
+		if host.Host == "" {
+			return errors.New("host entry missing host field for " + key)
+		}
+
+		hn.Hosts.Set(key, &host)
+	}
+
+	return nil
+
+}
+
+func NewHosts() *Hosts {
+	return &Hosts{
+		entries: make(map[string]HostEntry),
+		keys:    []string{},
+	}
+}
+
+func NewHostImports() *HostImports {
+	return &HostImports{
+		Hosts:   Hosts{entries: make(map[string]HostEntry), keys: []string{}},
+		Imports: []string{},
+	}
+}
+
+func (h *Hosts) Replace(map[string]HostEntry) {
+	if h == nil {
+		h = &Hosts{}
+	}
+
+	h.entries = map[string]HostEntry{}
+	h.keys = []string{}
+
+	for k, v := range h.entries {
+		h.keys = append(h.keys, k)
+		h.entries[k] = v
+	}
 }
 
 func (he *HostEntry) UnmarshalYAML(value *yaml.Node) error {

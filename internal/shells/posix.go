@@ -13,7 +13,7 @@ import (
 func init() {
 	exec.Register("bash", &exec.Executable{
 		Name:     "bash",
-		Variable: "XTASK_BASH_EXE",
+		Variable: "RUN_BASH_EXE",
 		Linux: []string{
 			"/bin/bash",
 			"/usr/bin/bash",
@@ -22,7 +22,7 @@ func init() {
 
 	exec.Register("pwsh", &exec.Executable{
 		Name:     "pwsh",
-		Variable: "XTASK_PWSH_EXE",
+		Variable: "RUN_PWSH_EXE",
 		Linux: []string{
 			"/usr/bin/pwsh",
 			"/usr/local/bin/pwsh",
@@ -31,7 +31,7 @@ func init() {
 
 	exec.Register("powershell", &exec.Executable{
 		Name:     "powershell",
-		Variable: "XTASK_POWERSHELL_EXE",
+		Variable: "RUN_POWERSHELL_EXE",
 		Linux: []string{
 			"/usr/bin/pwsh",
 			"/usr/local/bin/pwsh",
@@ -40,7 +40,7 @@ func init() {
 
 	exec.Register("sh", &exec.Executable{
 		Name:     "sh",
-		Variable: "XTASK_SH_EXE",
+		Variable: "RUN_SH_EXE",
 		Linux: []string{
 			"/bin/sh",
 			"/usr/bin/sh",
@@ -49,7 +49,7 @@ func init() {
 
 	exec.Register("deno", &exec.Executable{
 		Name:     "deno",
-		Variable: "XTASK_DENO_EXE",
+		Variable: "RUN_DENO_EXE",
 		Linux: []string{
 			"${HOME}/.local/bin/deno",
 			"${HOME}/.deno/bin/deno",
@@ -60,7 +60,7 @@ func init() {
 
 	exec.Register("node", &exec.Executable{
 		Name:     "node",
-		Variable: "XTASK_NODE_EXE",
+		Variable: "RUN_NODE_EXE",
 		Linux: []string{
 			"/usr/bin/node",
 			"/usr/local/bin/node",
@@ -69,7 +69,7 @@ func init() {
 
 	exec.Register("bun", &exec.Executable{
 		Name:     "bun",
-		Variable: "XTASK_BUN_EXE",
+		Variable: "RUN_BUN_EXE",
 		Linux: []string{
 			"/usr/bin/bun",
 			"/usr/local/bin/bun",
@@ -78,7 +78,7 @@ func init() {
 
 	exec.Register("python", &exec.Executable{
 		Name:     "python",
-		Variable: "XTASK_PYTHON_EXE",
+		Variable: "RUN_PYTHON_EXE",
 		Linux: []string{
 			"/usr/bin/python",
 			"/usr/bin/python3",
@@ -89,7 +89,7 @@ func init() {
 
 	exec.Register("ruby", &exec.Executable{
 		Name:     "ruby",
-		Variable: "XTASK_RUBY_EXE",
+		Variable: "RUN_RUBY_EXE",
 		Linux: []string{
 			"/usr/bin/ruby",
 			"/usr/local/bin/ruby",
