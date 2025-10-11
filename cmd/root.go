@@ -1,16 +1,14 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
 import (
 	"os"
 
+	"github.com/hyprxlabs/run/internal/env"
 	"github.com/spf13/cobra"
 )
-
-
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -37,15 +35,20 @@ func Execute() {
 }
 
 func init() {
+	file := env.Get("RUN_FILE")
+	dir := env.Get("RUN_DIR")
+	context := env.Get("RUN_CONTEXT")
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.run.yaml)")
+	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.task.yaml)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringP("file", "f", file, "Path to the YAML file.")
+	rootCmd.PersistentFlags().StringP("dir", "d", dir, "Directory to run the task in (default is current directory).")
+	rootCmd.PersistentFlags().StringP("context", "c", context, "The context to use. If not set, the 'default' context is used.")
+
 }
-
-

@@ -443,6 +443,10 @@ func (e *Environment) Values() []string {
 }
 
 func (e *Environment) Len() int {
+	if e == nil {
+		return 0
+	}
+
 	e.init()
 	return len(e.values)
 }

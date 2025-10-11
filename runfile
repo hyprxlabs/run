@@ -1,0 +1,6 @@
+
+
+tasks:
+  echo:
+    uses: bash
+    run: echo "Hello, World!"
