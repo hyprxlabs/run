@@ -4,7 +4,6 @@ Copyright © 2025 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"slices"
 	"strings"
@@ -25,21 +24,15 @@ var listCmd = &cobra.Command{
 		dir, _ := cmd.Flags().GetString("dir")
 		file, err := getFile(file, dir)
 		if err != nil {
-			msg := fmt.Sprintf("Error finding runfile: %w", err)
-			cmd.PrintErrf("%s\n", msg)
+			cmd.PrintErrf("Error loading xtaskfile: %v\n", err)
 			os.Exit(1)
 		}
 
 		rf := schema.NewRunfile()
 		err = rf.DecodeYAMLFile(file)
 		if err != nil {
-			msg := fmt.Sprintf("Error decoding runfile: %w", err)
-			cmd.PrintErrf("%s\n", msg)
+			cmd.PrintErrf("Error decoding xtaskfile: %v\n", err)
 			os.Exit(1)
-		}
-
-		for _, task := range rf.Tasks.Entries() {
-			cmd.Println(task.Id)
 		}
 
 		wf := workflows.NewWorkflow()
@@ -48,8 +41,7 @@ var listCmd = &cobra.Command{
 
 		err = wf.Load(*rf)
 		if err != nil {
-			msg := fmt.Sprintf("Error loading runfile: %w", err)
-			cmd.PrintErrf("%s\n", msg)
+			cmd.PrintErrf("Error loading xtaskfile: %v\n", err)
 			os.Exit(1)
 		}
 
