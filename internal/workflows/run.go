@@ -36,7 +36,12 @@ func (ws *Workflow) Run(taskNames []string, args []string) error {
 		return &CyclicalReferenceError{Cycles: cycles}
 	}
 
-	flatTasks, err := ws.Tasks.FlattenTasks(taskNames)
+	contextName := ws.ContextName
+	if len(contextName) == 0 {
+		contextName = "default"
+	}
+
+	flatTasks, err := ws.Tasks.FlattenTasks(taskNames, contextName)
 	if err != nil {
 		return err
 	}

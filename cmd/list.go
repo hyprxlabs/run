@@ -89,5 +89,5 @@ var listCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	taskCmd.AddCommand(listCmd)
 }

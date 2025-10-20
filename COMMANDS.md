@@ -9,3 +9,10 @@ run
   -p projectnae 
   -a "...:deploy"
   -f "path/to/run/file"
+
+
+run ...:build
+
+run ./**/test:build
+
+run deploy @traefik 

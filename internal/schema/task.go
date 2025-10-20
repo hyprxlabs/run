@@ -26,6 +26,7 @@ type Task struct {
 	With      With
 	Hosts     []string
 	Condition *string
+	Hooks     Hooks
 }
 
 func NewTasks() *Tasks {
@@ -112,6 +113,17 @@ func (t *Task) UnmarshalYAML(value *yaml.Node) error {
 				return yamlErrorf(*valueNode, "expected yaml scalar for 'uses' field")
 			}
 			t.Uses = &valueNode.Value
+
+		case "hooks":
+			hooks := Hooks{
+				Before: []string{},
+				After:  []string{},
+			}
+			if err := valueNode.Decode(&hooks); err != nil {
+				return err
+			}
+			t.Hooks = hooks
+
 		case "args":
 			if valueNode.Kind != yaml.SequenceNode {
 				return yamlErrorf(*valueNode, "expected yaml sequence for 'args' field")
@@ -207,6 +219,9 @@ func (w With) TryGetBool(key ...string) (bool, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return false, false
+	}
 	b, err := strconv.ParseBool(s)
 	return b, err == nil
 }
@@ -223,6 +238,9 @@ func (w With) TryGetInt(key ...string) (int, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return 0, false
+	}
 	i64, err := strconv.ParseInt(s, 10, 32)
 	return int(i64), err == nil
 }
@@ -239,6 +257,9 @@ func (w With) TryGetFloat(key ...string) (float64, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return 0, false
+	}
 	f, err := strconv.ParseFloat(s, 64)
 	return f, err == nil
 }
@@ -334,24 +355,62 @@ func (w With) ToMap() map[string]interface{} {
 	return m
 }
 
-func (t *Tasks) FlattenTasks(targets []string) ([]Task, error) {
-	return FlattenTasks(targets, *t, []Task{})
+func (t *Tasks) FlattenTasks(targets []string, context string) ([]Task, error) {
+	return FlattenTasks(targets, *t, []Task{}, context)
 }
 
-func FlattenTasks(targets []string, tasks Tasks, set []Task) ([]Task, error) {
+func FlattenTasks(targets []string, tasks Tasks, set []Task, context string) ([]Task, error) {
 
 	for _, target := range targets {
-		task, ok := tasks.Get(target)
-		if !ok {
-			return nil, errors.New("Task not found: " + target)
+		t := target
+
+		var task Task
+		found := false
+
+		// prefer context-specific task if context is provided and it is found.
+		if context != "" {
+			t = target + ":" + context
+			task2, ok := tasks.Get(t)
+			if !ok {
+				return nil, errors.New("Task not found: " + target + " or " + t)
+			}
+
+			task = task2
 		}
 
+		if !found {
+			t = target
+			task2, ok := tasks.Get(t)
+			if !ok {
+				return nil, errors.New("Task not found: " + target + " or " + t)
+			}
+
+			task = task2
+		}
+
+		// ensure dependencies are added first
 		if len(task.Needs) > 0 {
-			neededTasks, err := FlattenTasks(task.Needs, tasks, set)
+			neededTasks, err := FlattenTasks(task.Needs, tasks, set, context)
 			if err != nil {
 				return nil, err
 			}
 			set = neededTasks
+		}
+
+		// Treat hooks as something that always must be added around the main task
+		// even if they were already added as part of dependencies.
+
+		// only add before hooks if they task is setup for hooks
+		if len(task.Hooks.Before) > 0 {
+			for _, beforeHookSuffix := range task.Hooks.Before {
+				// use task.Id to ensure that context-specific hooks are resolved
+				// if the main task is context-specific, otherwise use the base task.
+				hookTaskName := task.Id + ":" + beforeHookSuffix
+				beforeTask, ok := tasks.Get(hookTaskName)
+				if ok {
+					set = append(set, beforeTask)
+				}
+			}
 		}
 
 		added := false
@@ -364,6 +423,19 @@ func FlattenTasks(targets []string, tasks Tasks, set []Task) ([]Task, error) {
 
 		if !added {
 			set = append(set, task)
+		}
+
+		// only add after hooks if they task is setup for hooks
+		if len(task.Hooks.After) > 0 {
+			for _, afterHookSuffix := range task.Hooks.After {
+				// use task.Id to ensure that context-specific hooks are resolved
+				// if the main task is context-specific, otherwise use the base task.
+				hookTaskName := task.Id + ":" + afterHookSuffix
+				afterTask, ok := tasks.Get(hookTaskName)
+				if ok {
+					set = append(set, afterTask)
+				}
+			}
 		}
 	}
 

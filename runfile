@@ -6,3 +6,4 @@ tasks:
     run: | 
       echo "Hello, World!"
       echo "This is a test" | grep "test2" || echo "No match found"
+    hooks: true
