@@ -23,7 +23,6 @@ func (t *Tasks) UnmarshalYAML(value *yaml.Node) error {
 		valueNode := value.Content[i+1]
 
 		key := keyNode.Value
-		println("Loading task:", key)
 		var task Task
 		err := valueNode.Decode(&task)
 		if err != nil {

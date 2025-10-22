@@ -371,11 +371,10 @@ func FlattenTasks(targets []string, tasks Tasks, set []Task, context string) ([]
 		if context != "" {
 			t = target + ":" + context
 			task2, ok := tasks.Get(t)
-			if !ok {
-				return nil, errors.New("Task not found: " + target + " or " + t)
+			if ok {
+				task = task2
+				found = true
 			}
-
-			task = task2
 		}
 
 		if !found {

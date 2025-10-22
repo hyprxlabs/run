@@ -7,3 +7,15 @@ tasks:
       echo "Hello, World!"
       echo "This is a test" | grep "test2" || echo "No match found"
     hooks: true
+
+  now:
+    uses: shell
+    run: date
+
+  now:before:
+    uses: shell
+    run: echo "About to get the date..."
+
+  now:after:
+    uses: shell
+    run: echo "Date retrieval complete."

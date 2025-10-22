@@ -139,6 +139,10 @@ func (e *Inputs) TryGetBool(key ...string) (bool, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return false, false
+	}
+
 	b, err := strconv.ParseBool(s)
 	return b, err == nil
 }
@@ -155,6 +159,9 @@ func (e *Inputs) TryGetInt(key ...string) (int, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return 0, false
+	}
 	i64, err := strconv.ParseInt(s, 10, 32)
 	return int(i64), err == nil
 }
@@ -171,6 +178,9 @@ func (e *Inputs) TryGetFloat(key ...string) (float64, bool) {
 	}
 
 	s, ok := v.(string)
+	if !ok {
+		return 0, false
+	}
 	f64, err := strconv.ParseFloat(s, 64)
 	return f64, err == nil
 }
