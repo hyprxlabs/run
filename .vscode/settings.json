@@ -1,7 +1,0 @@
-{
-    "go.goroot": "/home/hyprx/.local/share/mise/installs/go/1.25.2",
-    "go.alternateTools": {
-        "go": "/home/hyprx/.local/share/mise/shims/go",
-        "gopls": "/home/hyprx/.local/share/mise/shims/gopls"
-    }
-}
