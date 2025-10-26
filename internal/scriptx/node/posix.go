@@ -2,6 +2,8 @@
 
 package node
 
+import "github.com/hyprxlabs/run/internal/exec"
+
 func init() {
 	exec.Register("node", &exec.Executable{
 		Name:     "node",

@@ -12,35 +12,45 @@ const NAME = "pwsh"
 var ScriptArgs = []string{"-NoLogo", "-NoProfile", "-ExecutionPolicy", "Bypass"}
 
 func New(args ...string) *exec.Cmd {
-	return exec.New(NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "pwsh"
+	}
+
+	return exec.New(exe, args...)
 }
 
 func NewContext(ctx context.Context, args ...string) *exec.Cmd {
-	return exec.NewContext(ctx, NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "pwsh"
+	}
+
+	return exec.NewContext(ctx, exe, args...)
 }
 
 func File(path string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-File", path)
 	splat = append(splat, args...)
-	return exec.New(NAME, splat...)
+	return New(splat...)
 }
 
 func FileContext(ctx context.Context, path string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-File", path)
 	splat = append(splat, args...)
-	return exec.NewContext(ctx, NAME, splat...)
+	return NewContext(ctx, splat...)
 }
 
 func Inline(script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-Command", script)
 	splat = append(splat, args...)
-	return exec.New(NAME, splat...)
+	return New(splat...)
 }
 
 func InlineContext(ctx context.Context, script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-Command", script)
 	splat = append(splat, args...)
-	return exec.NewContext(ctx, NAME, splat...)
+	return NewContext(ctx, splat...)
 }
 
 func Script(script string, args ...string) *exec.Cmd {

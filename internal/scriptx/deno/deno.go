@@ -1,4 +1,4 @@
-package node
+package deno
 
 import (
 	"context"
@@ -7,49 +7,51 @@ import (
 	"github.com/hyprxlabs/run/internal/exec"
 )
 
-const NAME = "node"
+const NAME = "deno"
 
 var Extensions = []string{".js", ".mjs", ".cjs", ".ts"}
 
-var ScriptArgs = []string{}
+var ScriptArgs = []string{"-A"}
 
 func New(args ...string) *exec.Cmd {
-	var exe, _ = exec.Find(NAME, nil)
+	exe, _ := exec.Find(NAME, nil)
 	if exe == "" {
-		exe = "node"
+	    exe = "deno"
 	}
 
 	return exec.New(exe, args...)
 }
 
 func NewContext(ctx context.Context, args ...string) *exec.Cmd {
-	var exe, _ = exec.Find(NAME, nil)
+	exe, _ := exec.Find(NAME, nil)
 	if exe == "" {
-		exe = "node"
+	    exe = "deno"
 	}
 
 	return exec.NewContext(ctx, exe, args...)
 }
 
 func File(path string, args ...string) *exec.Cmd {
-	allArgs := append(append(ScriptArgs, path), args...)
+	splat := append([]string{"run"}, ScriptArgs...)
+	splat = append(splat, path)
+	allArgs := append(splat, args...)
 	return New(allArgs...)
 }
 
 func FileContext(ctx context.Context, path string, args ...string) *exec.Cmd {
-	allArgs := append(append(ScriptArgs, path), args...)
+	splat := append([]string{"run"}, ScriptArgs...)
+	splat = append(splat, path)
+	allArgs := append(splat, args...)
 	return NewContext(ctx, allArgs...)
 }
 
 func Inline(script string, args ...string) *exec.Cmd {
-	splat := append(ScriptArgs, "-e", script)
-	allArgs := append(splat, args...)
+	allArgs := append([]string{"eval", script}, args...)	
 	return New(allArgs...)
 }
 
 func InlineContext(ctx context.Context, script string, args ...string) *exec.Cmd {
-	splat := append(ScriptArgs, "-e", script)
-	allArgs := append(splat, args...)
+	allArgs := append([]string{"eval", script}, args...)
 	return NewContext(ctx, allArgs...)
 }
 

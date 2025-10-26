@@ -14,11 +14,21 @@ const (
 var ScriptArgs = []string{"--noprofile", "--norc", "-eo", "pipefail"}
 
 func New(args ...string) *exec.Cmd {
-	return exec.New(NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "bash"
+	}
+
+	return exec.New(exe, args...)
 }
 
 func NewContext(ctx context.Context, args ...string) *exec.Cmd {
-	return exec.NewContext(ctx, NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "bash"
+	}
+
+	return exec.NewContext(ctx, exe, args...)
 }
 
 func Script(script string, args ...string) *exec.Cmd {
@@ -47,24 +57,24 @@ func File(path string, args ...string) *exec.Cmd {
 	path = resolveScriptFile(path)
 	splat := append(ScriptArgs, path)
 	splat = append(splat, args...)
-	return exec.New(NAME, splat...)
+	return New(splat...)
 }
 
 func FileContext(ctx context.Context, path string, args ...string) *exec.Cmd {
 	path = resolveScriptFile(path)
 	splat := append(ScriptArgs, path)
 	splat = append(splat, args...)
-	return exec.NewContext(ctx, NAME, splat...)
+	return NewContext(ctx, splat...)
 }
 
 func Inline(script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-c", script)
 	splat = append(splat, args...)
-	return exec.New(NAME, splat...)
+	return New(splat...)
 }
 
 func InlineContext(ctx context.Context, script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, "-c", script)
 	splat = append(splat, args...)
-	return exec.NewContext(ctx, NAME, splat...)
+	return NewContext(ctx, splat...)
 }

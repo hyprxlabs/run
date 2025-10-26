@@ -5,33 +5,43 @@ const NAME = "sh"
 var ScriptArgs = []string{"-e"}
 
 func New(args ...string) *exec.Cmd {
-	return exec.New(NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "sh"
+	}
+
+	return exec.New(exe, args...)
 }
 
 func NewContext(ctx context.Context, args ...string) *exec.Cmd {
-	return exec.NewContext(ctx, NAME, args...)
+	exe, _ := exec.Find(NAME, nil)
+	if exe == "" {
+		exe = "sh"
+	}
+
+	return exec.NewContext(ctx, exe, args...)
 }
 
 func File(path string, args ...string) *exec.Cmd {
 	allArgs := append(append(ScriptArgs, path), args...)
-	return exec.New(NAME, allArgs...)
+	return New(allArgs...)
 }
 
 func FileContext(ctx context.Context, path string, args ...string) *exec.Cmd {
 	allArgs := append(append(ScriptArgs, path), args...)
-	return exec.NewContext(ctx, NAME, allArgs...)
+	return NewContext(ctx, allArgs...)
 }
 
 func Inline(script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, script)
 	splat = append(splat, args...)
-	return exec.New(NAME, splat...)
+	return New(splat...)
 }
 
 func InlineContext(ctx context.Context, script string, args ...string) *exec.Cmd {
 	splat := append(ScriptArgs, script)
 	splat = append(splat, args...)
-	return exec.NewContext(ctx, NAME, splat...)
+	return NewContext(ctx, splat...)
 }
 
 func Script(script string, args ...string) *exec.Cmd {
