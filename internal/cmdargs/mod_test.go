@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hyprxlabs/nxgo/cmdargs"
+	"github.com/hyprxlabs/run/internal/cmdargs"
 	"github.com/stretchr/testify/assert"
 )
 

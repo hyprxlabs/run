@@ -2,7 +2,12 @@
 
 package bash
 
-import "github.com/hyprxlabs/run/internal/exec"
+import (
+	"path/filepath"
+	"strings"
+
+	"github.com/hyprxlabs/run/internal/exec"
+)
 
 func init() {
 	exec.Register("bash", &exec.Executable{

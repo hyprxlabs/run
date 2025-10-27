@@ -15,7 +15,6 @@ func init() {
 	})
 }
 
-
 func resolveScriptFile(script string) string {
-	return script 
+	return script
 }

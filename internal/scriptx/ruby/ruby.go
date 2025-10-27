@@ -1,5 +1,12 @@
 package ruby
 
+import (
+	"context"
+	"strings"
+
+	"github.com/hyprxlabs/run/internal/exec"
+)
+
 const NAME = "ruby"
 
 var ScriptArgs = []string{"-e"}
@@ -24,7 +31,7 @@ func NewContext(ctx context.Context, args ...string) *exec.Cmd {
 
 func File(file string, args ...string) *exec.Cmd {
 	allArgs := append([]string{file}, args...)
-	return	New(allArgs...)
+	return New(allArgs...)
 }
 
 func FileContext(ctx context.Context, file string, args ...string) *exec.Cmd {
