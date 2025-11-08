@@ -15,13 +15,13 @@ import (
 	"github.com/hyprxlabs/run/internal/scriptx/golang"
 	"github.com/hyprxlabs/run/internal/scriptx/node"
 	"github.com/hyprxlabs/run/internal/scriptx/nushell"
+	"github.com/hyprxlabs/run/internal/scriptx/powershell"
 	"github.com/hyprxlabs/run/internal/scriptx/pwsh"
 	"github.com/hyprxlabs/run/internal/scriptx/python"
 	"github.com/hyprxlabs/run/internal/scriptx/ruby"
 	"github.com/hyprxlabs/run/internal/scriptx/sh"
 
 	"github.com/hyprxlabs/run/internal/errors"
-	"github.com/hyprxlabs/run/internal/shells"
 )
 
 func runShell(ctx TaskContext) *TaskResult {
@@ -52,7 +52,7 @@ func runShell(ctx TaskContext) *TaskResult {
 	case "pwsh":
 		cmd = pwsh.ScriptContext(ctx.Context, run, splat...)
 	case "powershell":
-		cmd = shells.PowerShellScriptContext(ctx.Context, run, splat...)
+		cmd = powershell.ScriptContext(ctx.Context, run, splat...)
 
 	case "sh":
 		cmd = sh.ScriptContext(ctx.Context, run, splat...)
