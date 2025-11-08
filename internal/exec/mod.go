@@ -28,6 +28,7 @@ type Cmd struct {
 	ctx           *context.Context // if true, the command is a context command
 	logger        func(cmd *Cmd)
 	disableLogger bool
+	TempFile      *string
 }
 
 func New(name string, args ...string) *Cmd {
@@ -221,6 +222,9 @@ func (c *Cmd) Quiet() (*Result, error) {
 	}
 	out.EndedAt = time.Now().UTC()
 	out.Code = c.Cmd.ProcessState.ExitCode()
+	if c.TempFile != nil {
+		out.TempFile = c.TempFile
+	}
 
 	return &out, nil
 }
@@ -256,6 +260,10 @@ func (c *Cmd) Run() (*Result, error) {
 
 	out.EndedAt = time.Now().UTC()
 	out.Code = c.Cmd.ProcessState.ExitCode()
+	if c.TempFile != nil {
+		out.TempFile = c.TempFile
+	}
+
 	return &out, nil
 }
 
@@ -293,6 +301,9 @@ func (c *Cmd) Output() (*Result, error) {
 	out.Code = c.Cmd.ProcessState.ExitCode()
 	out.Stdout = outb.Bytes()
 	out.Stderr = errb.Bytes()
+	if c.TempFile != nil {
+		out.TempFile = c.TempFile
+	}
 
 	return &out, nil
 }

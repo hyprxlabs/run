@@ -11,6 +11,7 @@ tasks:
   now:
     uses: shell
     run: date
+    hooks: true
 
   now:before:
     uses: shell

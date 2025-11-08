@@ -15,6 +15,7 @@ type Result struct {
 	Args      []string
 	StartedAt time.Time
 	EndedAt   time.Time
+	TempFile  *string
 }
 
 func (o *Result) Text() string {

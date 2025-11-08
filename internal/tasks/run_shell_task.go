@@ -8,6 +8,17 @@ import (
 	"github.com/hyprxlabs/run/internal/cmdargs"
 	"github.com/hyprxlabs/run/internal/env"
 	"github.com/hyprxlabs/run/internal/exec"
+	"github.com/hyprxlabs/run/internal/scriptx/bash"
+	"github.com/hyprxlabs/run/internal/scriptx/bun"
+	"github.com/hyprxlabs/run/internal/scriptx/deno"
+	"github.com/hyprxlabs/run/internal/scriptx/dotnet"
+	"github.com/hyprxlabs/run/internal/scriptx/golang"
+	"github.com/hyprxlabs/run/internal/scriptx/node"
+	"github.com/hyprxlabs/run/internal/scriptx/nushell"
+	"github.com/hyprxlabs/run/internal/scriptx/pwsh"
+	"github.com/hyprxlabs/run/internal/scriptx/python"
+	"github.com/hyprxlabs/run/internal/scriptx/ruby"
+	"github.com/hyprxlabs/run/internal/scriptx/sh"
 
 	"github.com/hyprxlabs/run/internal/errors"
 	"github.com/hyprxlabs/run/internal/shells"
@@ -31,34 +42,50 @@ func runShell(ctx TaskContext) *TaskResult {
 	splat := ctx.Task.Args
 
 	switch ctx.Task.Uses {
+	case "runshell":
+		fallthrough
 	case "shell":
 		return runXPlatShell(run, ctx)
 	case "bash":
-		cmd = shells.BashScriptContext(ctx.Context, run, splat...)
+		cmd = bash.ScriptContext(ctx.Context, run, splat...)
 
+	case "pwsh":
+		cmd = pwsh.ScriptContext(ctx.Context, run, splat...)
 	case "powershell":
 		cmd = shells.PowerShellScriptContext(ctx.Context, run, splat...)
 
 	case "sh":
-		cmd = shells.ShScriptContext(ctx.Context, run, splat...)
+		cmd = sh.ScriptContext(ctx.Context, run, splat...)
 
-	case "pwsh":
-		cmd = shells.PwshScriptContext(ctx.Context, run, splat...)
+	case "go":
+		fallthrough
+	case "golang":
+		cmd = golang.ScriptContext(ctx.Context, run, splat...)
+
+	case "dotnet":
+		fallthrough
+	case "csharp":
+		cmd = dotnet.ScriptContext(ctx.Context, run, splat...)
 
 	case "deno":
-		cmd = shells.DenoScriptContext(ctx.Context, run, splat...)
+		cmd = deno.ScriptContext(ctx.Context, run, splat...)
 
 	case "node":
-		cmd = shells.NodeScriptContext(ctx.Context, run, splat...)
+		cmd = node.ScriptContext(ctx.Context, run, splat...)
 
 	case "bun":
-		cmd = shells.BunScriptContext(ctx.Context, run, splat...)
+		cmd = bun.ScriptContext(ctx.Context, run, splat...)
 
 	case "python":
-		cmd = shells.PythonScriptContext(ctx.Context, run, splat...)
+		cmd = python.ScriptContext(ctx.Context, run, splat...)
+
+	case "nushell":
+		fallthrough
+	case "nu":
+		cmd = nushell.ScriptContext(ctx.Context, run, splat...)
 
 	case "ruby":
-		cmd = shells.RubyScriptContext(ctx.Context, run, splat...)
+		cmd = ruby.ScriptContext(ctx.Context, run, splat...)
 
 	default:
 		err := errors.New("Unsupported shell: " + ctx.Task.Uses)
