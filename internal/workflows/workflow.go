@@ -8,22 +8,23 @@ import (
 )
 
 type Workflow struct {
-	Name        *string
-	App         *string
-	Path        string
-	Contexts    []string
-	Version     *string
-	Config      *schema.RunfileConfig
-	Env         *schema.Environment
-	Tasks       schema.Tasks
-	Hosts       schema.Hosts
-	Values      map[string]interface{}
-	Args        []string
-	ContextName string
-	Context     context.Context
-	cleanupEnv  bool
-	cleanupPath bool
-	parent      *Workflow
+	Name         *string
+	App          *string
+	Path         string
+	Contexts     []string
+	Version      *string
+	Config       *schema.RunfileConfig
+	Env          *schema.Environment
+	DynamicTasks map[string]schema.TaskDef
+	Tasks        schema.Tasks
+	Hosts        schema.Hosts
+	Values       map[string]interface{}
+	Args         []string
+	ContextName  string
+	Context      context.Context
+	cleanupEnv   bool
+	cleanupPath  bool
+	parent       *Workflow
 }
 
 func NewWorkflow() *Workflow {
@@ -53,6 +54,9 @@ func NewWorkflow() *Workflow {
 			Env:   *schema.NewEnv(),
 			Shell: &defaultShell,
 		},
+
+		DynamicTasks: map[string]schema.TaskDef{},
+
 		Env:         schema.NewEnv(),
 		Values:      map[string]interface{}{},
 		ContextName: defaultContext,

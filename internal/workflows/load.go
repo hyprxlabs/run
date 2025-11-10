@@ -14,6 +14,7 @@ import (
 	"github.com/hyprxlabs/run/internal/env"
 	"github.com/hyprxlabs/run/internal/paths"
 	"github.com/hyprxlabs/run/internal/schema"
+	"github.com/hyprxlabs/run/internal/tasks"
 	"github.com/hyprxlabs/run/internal/versions"
 	"gopkg.in/yaml.v3"
 )
@@ -221,6 +222,29 @@ func (wf *Workflow) LoadEnv(runfile schema.Runfile) error {
 
 	if wf == nil {
 		wf = NewWorkflow()
+	}
+
+	for _, k := range runfile.Import.Tasks {
+		if len(k.Path) == 0 {
+			return errors.New("task import path is empty")
+		}
+
+		taskDefs := &schema.TaskDefs{
+			Path: k.Path,
+		}
+		err := taskDefs.DecodeYAMLFile(k.Path)
+		if err != nil {
+			return errors.New("failed to load task import file: " + k.Path + " error: " + err.Error())
+		}
+
+		for _, taskDef := range taskDefs.Tasks {
+			if taskDef.Id == "" {
+				return errors.New("task import file: " + k.Path + " has task with empty id")
+			}
+
+			taskDef.Path = k.Path
+			tasks.RegisterDynamicTask(taskDef.Id, taskDef)
+		}
 	}
 
 	envMap := schema.NewEnv()

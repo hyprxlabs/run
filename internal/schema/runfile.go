@@ -7,9 +7,17 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-type Runfile struct {
-	Name string
+/**
 
+import:
+ tasks:
+
+
+**/
+
+type Runfile struct {
+	Name        string
+	Import      Import
 	Config      RunfileConfig
 	Path        string
 	Env         Environment

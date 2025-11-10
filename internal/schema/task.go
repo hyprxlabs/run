@@ -27,6 +27,7 @@ type Task struct {
 	Hosts     []string
 	Condition *string
 	Hooks     Hooks
+	Force     bool
 }
 
 func NewTasks() *Tasks {
